@@ -2,11 +2,28 @@
 <html>
 <body>
 
-<h2>What Can JavaScript Do?</h2>
+<h2>JavaScript HTML Events</h2>
+<p>Click the button to display the date.</p>
 
-<p id="demo">JavaScript can change HTML content.</p>
+<button onclick="connectBLE()">The time is?</button>
 
-<button type="button" onclick='document.getElementById("demo").innerHTML = "Hello JavaScript!"'>Click Me!</button>
+<script>
+  //https://web.dev/i18n/es/bluetooth/#connect
+function connectBLE() {
+  navigator.bluetooth.requestDevice()
+.then(device => {
+  // Human-readable name of the device.
+  console.log(device.name);
+
+  // Attempts to connect to remote GATT Server.
+  return device.gatt.connect();
+})
+.then(server => { /* … */ })
+.catch(error => { console.error(error); });
+}
+</script>
+
+<p id="demo"></p>
 
 </body>
-</html>
+</html> 

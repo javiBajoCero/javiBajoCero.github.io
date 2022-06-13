@@ -10,7 +10,7 @@
 <script>
   //https://web.dev/i18n/es/bluetooth/#connect
 function connectBLE() {
-  navigator.bluetooth.requestDevice()
+  navigator.bluetooth.requestDevice({acceptAllDevices:true})
 .then(device => {
   // Human-readable name of the device.
   console.log(device.name);

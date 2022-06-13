@@ -15,7 +15,8 @@ function onButtonClick() {
   console.log('Requesting any Bluetooth Device...');
   navigator.bluetooth.requestDevice({
    // filters: [...] <- Prefer filters to save energy & show relevant devices.
-      acceptAllDevices: true})
+      acceptAllDevices: true},
+      optionalServices: ['battery_service'])
   .then(device => {
     console.log('Connecting to GATT Server...');
     return device.gatt.connect();

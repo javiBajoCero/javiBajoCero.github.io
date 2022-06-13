@@ -2,24 +2,64 @@
 <html>
 <body>
 
-<h2>JavaScript HTML Events</h2>
-<p>Click the button to display the date.</p>
+<h2>JavaScript BLE shenannigans</h2>
+<p>Click the button to discover new wonderfull errors.</p>
 
-<button onclick="connectBLE()">The time is?</button>
+<button onclick="onButtonClick()">BLE stuff</button>
 
 <script>
   //https://web.dev/i18n/es/bluetooth/#connect
-function connectBLE() {
-  navigator.bluetooth.requestDevice({acceptAllDevices:true})
-.then(device => {
-  // Human-readable name of the device.
-  console.log(device.name);
+  //https://googlechrome.github.io/samples/web-bluetooth/discover-services-and-characteristics.html?optionalServices=e
+function onButtonClick() {
+  // Validate services UUID entered by user first.
+  let optionalServices = document.querySelector('#optionalServices').value
+    .split(/, ?/).map(s => s.startsWith('0x') ? parseInt(s) : s)
+    .filter(s => s && BluetoothUUID.getService);
 
-  // Attempts to connect to remote GATT Server.
-  return device.gatt.connect();
-})
-.then(server => { /* … */ })
-.catch(error => { console.error(error); });
+  log('Requesting any Bluetooth Device...');
+  navigator.bluetooth.requestDevice({
+   // filters: [...] <- Prefer filters to save energy & show relevant devices.
+      acceptAllDevices: true,
+      optionalServices: optionalServices})
+  .then(device => {
+    log('Connecting to GATT Server...');
+    return device.gatt.connect();
+  })
+  .then(server => {
+    // Note that we could also get all services that match a specific UUID by
+    // passing it to getPrimaryServices().
+    log('Getting Services...');
+    return server.getPrimaryServices();
+  })
+  .then(services => {
+    log('Getting Characteristics...');
+    let queue = Promise.resolve();
+    services.forEach(service => {
+      queue = queue.then(_ => service.getCharacteristics().then(characteristics => {
+        log('> Service: ' + service.uuid);
+        characteristics.forEach(characteristic => {
+          log('>> Characteristic: ' + characteristic.uuid + ' ' +
+              getSupportedProperties(characteristic));
+        });
+      }));
+    });
+    return queue;
+  })
+  .catch(error => {
+    log('Argh! ' + error);
+  });
+}
+  
+  /* Utils */
+
+function getSupportedProperties(characteristic) {
+  let supportedProperties = [];
+  for (const p in characteristic.properties) {
+    if (characteristic.properties[p] === true) {
+      supportedProperties.push(p.toUpperCase());
+    }
+  }
+  return '[' + supportedProperties.join(', ') + ']';
 }
 </script>
 

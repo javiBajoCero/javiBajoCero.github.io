@@ -12,28 +12,28 @@
   //https://googlechrome.github.io/samples/web-bluetooth/discover-services-and-characteristics.html?optionalServices=e
 function onButtonClick() {
 
-  log('Requesting any Bluetooth Device...');
+  log.console('Requesting any Bluetooth Device...');
   navigator.bluetooth.requestDevice({
    // filters: [...] <- Prefer filters to save energy & show relevant devices.
       acceptAllDevices: true})
   .then(device => {
-    log('Connecting to GATT Server...');
+    log.console('Connecting to GATT Server...');
     return device.gatt.connect();
   })
   .then(server => {
     // Note that we could also get all services that match a specific UUID by
     // passing it to getPrimaryServices().
-    log('Getting Services...');
+    log.console('Getting Services...');
     return server.getPrimaryServices();
   })
   .then(services => {
-    log('Getting Characteristics...');
+    log.console('Getting Characteristics...');
     let queue = Promise.resolve();
     services.forEach(service => {
       queue = queue.then(_ => service.getCharacteristics().then(characteristics => {
-        log('> Service: ' + service.uuid);
+        log.console('> Service: ' + service.uuid);
         characteristics.forEach(characteristic => {
-          log('>> Characteristic: ' + characteristic.uuid + ' ' +
+          log.console('>> Characteristic: ' + characteristic.uuid + ' ' +
               getSupportedProperties(characteristic));
         });
       }));
@@ -41,7 +41,7 @@ function onButtonClick() {
     return queue;
   })
   .catch(error => {
-    log('Argh! ' + error);
+    log.console('Argh! ' + error);
   });
 }
   

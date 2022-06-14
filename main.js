@@ -62,15 +62,15 @@ function handleBatteryLevelChanged(event) {
 }
 
 function onStartNotificationsButtonClick() {
-  log('Starting Battery Level Notifications...');
+  console.log('Starting Battery Level Notifications...');
   batteryLevelCharacteristic.startNotifications()
   .then(_ => {
-    log('> Notifications started');
+    console.log('> Notifications started');
     document.querySelector('#startNotifications').disabled = true;
     document.querySelector('#stopNotifications').disabled = false;
   })
   .catch(error => {
-    log('Argh! ' + error);
+    console.log('Argh! ' + error);
   });
 }
 

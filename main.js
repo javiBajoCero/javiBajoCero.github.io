@@ -2,50 +2,106 @@
   //https://googlechrome.github.io/samples/web-bluetooth/discover-services-and-characteristics.html?optionalServices=e
   //https://developer.mozilla.org/en-US/docs/Web/API/Bluetooth/requestDevice
   //https://googlechrome.github.io/samples/web-bluetooth/read-characteristic-value-changed.html
-function onButtonClick() {
+var bluetoothDevice;
+var batteryLevelCharacteristic;
 
-  console.log('Requesting any Bluetooth Device...');
-  navigator.bluetooth.requestDevice({
+function onReadBatteryLevelButtonClick() {
+  return (bluetoothDevice ? Promise.resolve() : requestDevice())
+  .then(connectDeviceAndCacheCharacteristics)
+  .then(_ => {
+    log('Reading Battery Level...');
+    return batteryLevelCharacteristic.readValue();
+  })
+  .catch(error => {
+    log('Argh! ' + error);
+  });
+}
+
+function requestDevice() {
+  log('Requesting any Bluetooth Device...');
+  return navigator.bluetooth.requestDevice({
    // filters: [...] <- Prefer filters to save energy & show relevant devices.
       acceptAllDevices: true,
       optionalServices: ['battery_service']})
   .then(device => {
-    console.log('Connecting to GATT Server...');
-    return device.gatt.connect();
-  })
-  .then(server => {
-    // Note that we could also get all services that match a specific UUID by
-    // passing it to getPrimaryServices().
-    console.log('Getting Services...');
-    return server.getPrimaryServices();
-  })
-  .then(services => {
-    console.log('Getting Characteristics...');
-    let queue = Promise.resolve();
-    services.forEach(service => {
-      queue = queue.then(_ => service.getCharacteristics().then(characteristics => {
-        console.log('> Service: ' + service.uuid);
-        characteristics.forEach(characteristic => {
-          console.log('>> Characteristic: ' + characteristic.uuid + ' ' +
-              getSupportedProperties(characteristic));
-        });
-      }));
-    });
-    return queue;
-  })
-  .catch(error => {
-    console.log('Argh! ' + error);
+    bluetoothDevice = device;
+    bluetoothDevice.addEventListener('gattserverdisconnected', onDisconnected);
   });
 }
-  
-  /* Utils */
 
-function getSupportedProperties(characteristic) {
-  let supportedProperties = [];
-  for (const p in characteristic.properties) {
-    if (characteristic.properties[p] === true) {
-      supportedProperties.push(p.toUpperCase());
-    }
+function connectDeviceAndCacheCharacteristics() {
+  if (bluetoothDevice.gatt.connected && batteryLevelCharacteristic) {
+    return Promise.resolve();
   }
-  return '[' + supportedProperties.join(', ') + ']';
+
+  log('Connecting to GATT Server...');
+  return bluetoothDevice.gatt.connect()
+  .then(server => {
+    log('Getting Battery Service...');
+    return server.getPrimaryService('battery_service');
+  })
+  .then(service => {
+    log('Getting Battery Level Characteristic...');
+    return service.getCharacteristic('battery_level');
+  })
+  .then(characteristic => {
+    batteryLevelCharacteristic = characteristic;
+    batteryLevelCharacteristic.addEventListener('characteristicvaluechanged',
+        handleBatteryLevelChanged);
+    document.querySelector('#startNotifications').disabled = false;
+    document.querySelector('#stopNotifications').disabled = true;
+  });
+}
+
+/* This function will be called when `readValue` resolves and
+ * characteristic value changes since `characteristicvaluechanged` event
+ * listener has been added. */
+function handleBatteryLevelChanged(event) {
+  let batteryLevel = event.target.value.getUint8(0);
+  log('> Battery Level is ' + batteryLevel + '%');
+}
+
+function onStartNotificationsButtonClick() {
+  log('Starting Battery Level Notifications...');
+  batteryLevelCharacteristic.startNotifications()
+  .then(_ => {
+    log('> Notifications started');
+    document.querySelector('#startNotifications').disabled = true;
+    document.querySelector('#stopNotifications').disabled = false;
+  })
+  .catch(error => {
+    log('Argh! ' + error);
+  });
+}
+
+function onStopNotificationsButtonClick() {
+  log('Stopping Battery Level Notifications...');
+  batteryLevelCharacteristic.stopNotifications()
+  .then(_ => {
+    log('> Notifications stopped');
+    document.querySelector('#startNotifications').disabled = false;
+    document.querySelector('#stopNotifications').disabled = true;
+  })
+  .catch(error => {
+    log('Argh! ' + error);
+  });
+}
+
+function onResetButtonClick() {
+  if (batteryLevelCharacteristic) {
+    batteryLevelCharacteristic.removeEventListener('characteristicvaluechanged',
+        handleBatteryLevelChanged);
+    batteryLevelCharacteristic = null;
+  }
+  // Note that it doesn't disconnect device.
+  bluetoothDevice = null;
+  log('> Bluetooth Device reset');
+}
+
+function onDisconnected() {
+  log('> Bluetooth Device disconnected');
+  connectDeviceAndCacheCharacteristics()
+  .catch(error => {
+    log('Argh! ' + error);
+  });
 }

@@ -1,14 +1,28 @@
 <!DOCTYPE html>
 <html>
   <head> 
+      <title>Web BLE research</title>
+    <meta name="webble" content="user-scalable=no">
     <script type = "text/javascript" src="main.js"></script>  
   </head> 
-<body>
+<body scroll="no" style="overflow: hidden;position: fixed;
+font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif ;
+color:rgb(128, 128, 128);
+font-size: xx-large;">
 
-  
-<h2>JavaScript BLE shenannigans</h2>
-<p>Click the button to discover new wonderfull errors.</p>
+<h1 style="text-align:center">JavaScript BLE shenannigans </h1>
+<p  style="text-align:center">Click any button to discover new wonderfull errors.</p>
 
+
+    <p style="text-align: center;">
+        X: <span id="x_coordinate"> </span>
+        Y: <span id="y_coordinate"> </span>
+        Speed: <span id="speed"> </span> %
+        Angle: <span id="angle"> </span>
+    </p>
+    <canvas id="canvas" ></canvas>
+	
+	
 <button onclick="onReadBatteryLevelButtonClick()">READ BATTERY LEVEL</button>
 <button onclick="onStartNotificationsButtonClick()">START NOTIFICATIONS</button>
 <button onclick="onStopNotificationsButtonClick()">STOP NOTIFICATIONS</button>
@@ -17,4 +31,5 @@
 <p id="demo"></p>
 
 </body>
-</html> 
+</html><br>
+
